@@ -96,11 +96,11 @@
 		
 		// AMIR (there's no need to create a new address each time)
 		$tmp_address=coinspark_bitcoin_cli('getnewaddress', $testnet);
-		// $tmp_address2=coinspark_bitcoin_cli('getnewaddress', $testnet);
+		$tmp_address2=coinspark_bitcoin_cli('getnewaddress', $testnet);
 		if ($input_amount == $output_amount) {
 			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
                                 $tmp_address => $output_amount, // stub
-                               // $tmp_address2 => $output_amount,
+                               $tmp_address2 => $output_amount,
 			));
 		} else {
 			// --
@@ -108,7 +108,7 @@
 				// AMIR
 				//$send_address => (float)$send_amount,
 				$tmp_address => $output_amount, // stub
-				// $tmp_address2 => $output_amount,
+				$tmp_address2 => $output_amount,
 				// --
 				$change_address => $change_amount,
 			));
@@ -121,11 +121,12 @@
 			'scriptPubKey' => '6a'.reset(unpack('H*', chr(strlen($metadata)).$metadata)), // here's the OP_RETURN
 		);
 
-
-		// $txn_unpacked['vout'][1]=array(
-		// 	'value' => 0,
-		// 	'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
-		// );
+		// AMIR
+		$txn_unpacked['vout'][1]=array(
+			'value' => 0,
+			'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
+		);
+		// --
 
 		$raw_txn=coinspark_pack_raw_txn($txn_unpacked);
 		
