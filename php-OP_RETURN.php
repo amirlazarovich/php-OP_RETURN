@@ -26,14 +26,16 @@
  * THE SOFTWARE.
  */
 
+	require 'utils.php';
 
-	define('CONST_BITCOIN_CMD', '/usr/bin/bitcoin-cli'); // path to bitcoin executable on this server
-	define('CONST_BITCOIN_FEE', 0.00010000); // transaction fee to pay
-	
+	define('CONST_BITCOIN_CMD', '/usr/local/bin/bitcoin-cli'); // path to bitcoin executable on this server
+	define('CONST_BITCOIN_FEE', 0.00010000); // transaction fee to pay 
+	define('CONST_BITCOIN_FEE_IN_USD', 0.01);
 
 //	Main function in library
 
-	function coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet=false)
+	//function coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet=false)
+	function coinspark_OP_RETURN_send($metadata, $testnet=false, $execute=false)
 	{
 	
 	//	Validate some parameters
@@ -41,9 +43,11 @@
 		if (!file_exists(CONST_BITCOIN_CMD))
 			return array('error' => 'Please check CONST_BITCOIN_CMD is set correctly');
 	
-		$result=coinspark_bitcoin_cli('validateaddress', $testnet, $send_address);
-		if (!$result['isvalid'])
-			return array('error' => 'Send address could not be validated: '.$send_address);
+		// AMIR
+		//$result=coinspark_bitcoin_cli('validateaddress', $testnet, $send_address);
+		//if (!$result['isvalid'])
+		//	return array('error' => 'Send address could not be validated: '.$send_address);
+		// --
 			
 		if (strlen($metadata)>75)
 			return array('error' => 'Metadata limit is 75 bytes, and you should probably stick to 40.');
@@ -66,8 +70,13 @@
 	
 		$inputs_spend=array();
 		$input_amount=0;
-		$output_amount=$send_amount+CONST_BITCOIN_FEE;		
-		
+
+		// AMIR
+		//$output_amount=$send_amount+CONST_BITCOIN_FEE;		
+		//$output_amount=CONST_BITCOIN_FEE;
+		$output_amount=getBTCValueForUSD(CONST_BITCOIN_FEE_IN_USD);
+		// --
+
 		foreach ($unspent_inputs as $unspent_input) {
 			$inputs_spend[]=$unspent_input;
 
@@ -85,24 +94,52 @@
 		$change_amount=$input_amount-$output_amount;		
 		$change_address=coinspark_bitcoin_cli('getrawchangeaddress', $testnet);
 		
-		$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
-			$send_address => (float)$send_amount,
-			$change_address => $change_amount,
-		));
+		// AMIR (there's no need to create a new address each time)
+		$tmp_address=coinspark_bitcoin_cli('getnewaddress', $testnet);
+		// $tmp_address2=coinspark_bitcoin_cli('getnewaddress', $testnet);
+		if ($input_amount == $output_amount) {
+			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
+                                $tmp_address => $output_amount, // stub
+                               // $tmp_address2 => $output_amount,
+			));
+		} else {
+			// --
+			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
+				// AMIR
+				//$send_address => (float)$send_amount,
+				$tmp_address => $output_amount, // stub
+				// $tmp_address2 => $output_amount,
+				// --
+				$change_address => $change_amount,
+			));
+		}
 
-	
 	//	Unpack the raw transaction, add the OP_RETURN, and re-pack it
-		
 		$txn_unpacked=coinspark_unpack_raw_txn($raw_txn);
-	
-		$txn_unpacked['vout'][]=array(
+		$txn_unpacked['vout'][0]=array(
 			'value' => 0,
 			'scriptPubKey' => '6a'.reset(unpack('H*', chr(strlen($metadata)).$metadata)), // here's the OP_RETURN
 		);
-			
-		$raw_txn=coinspark_pack_raw_txn($txn_unpacked);
 
+
+		// $txn_unpacked['vout'][1]=array(
+		// 	'value' => 0,
+		// 	'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
+		// );
+
+		$raw_txn=coinspark_pack_raw_txn($txn_unpacked);
 		
+		// AMIR
+		if (!$execute) {
+			echo "************** DRY RUN **************\n";
+			echo "Raw Transaction:\n";
+			$decoded_txn = coinspark_bitcoin_cli('decoderawtransaction', $testnet, $raw_txn);
+			print_r($decoded_txn);
+			echo "*************************************\n";
+			return;
+		}
+		// --
+
 	//	Sign and send the transaction
 
 		$signed_txn=coinspark_bitcoin_cli('signrawtransaction', $testnet, $raw_txn);

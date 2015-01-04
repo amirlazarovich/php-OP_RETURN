@@ -26,8 +26,11 @@
  * THE SOFTWARE.
  */
 
-
-	if ($argc<4) {
+	
+	// AMIR
+	//if ($argc<4) {
+	if ($argc<2) {
+	// --
 		echo <<<HEREDOC
 Usage:
 php send-OP_RETURN.php <send-address> <send-amount> <metadata> <testnet (optional)>'
@@ -40,15 +43,22 @@ php send-OP_RETURN.php mzEJxCrdva57shpv62udriBBgMECmaPce4 0.001 'Hello, testnet 
 HEREDOC;
 		exit;
 	}
-	
-	@list($dummy, $send_address, $send_amount, $metadata, $testnet)=$argv;
+
+	// AMIR
+	//@list($dummy, $send_address, $send_amount, $metadata, $testnet)=$argv;
+	@list($dummy, $metadata, $testnet, $execute)=$argv;
+	// --
 	
 	require 'php-OP_RETURN.php';
 
 	if (preg_match('/^([0-9A-Fa-f]{2})*$/', $metadata))
 		$metadata=pack('H*', $metadata);
+
 	
-	$result=coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet);
+	// AMIR
+	//$result=coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet);
+	$result=coinspark_OP_RETURN_send($metadata, $testnet, $execute);
+	// --
 	
 	if (isset($result['error']))
 		echo 'Error: '.$result['error']."\n";
