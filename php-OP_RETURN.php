@@ -128,7 +128,7 @@
 		// AMIR
 		$txn_unpacked['vout'][1]=array(
 			// 'value' => 0,
-			'scriptPubKey' => '220000f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
+			'scriptPubKey' => '26505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
 			// 'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
 		);
 		//
