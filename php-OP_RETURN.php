@@ -31,6 +31,7 @@
 	define('CONST_BITCOIN_CMD', '/usr/local/bin/bitcoin-cli'); // path to bitcoin executable on this server
 	define('CONST_BITCOIN_FEE', 0.00010000); // transaction fee to pay 
 	define('CONST_BITCOIN_FEE_IN_USD', 0.01);
+	define('CONST_SATOSHI', 0.00000001);
 
 //	Main function in library
 
@@ -91,16 +92,19 @@
 	
 	//	Build the initial raw transaction
 			
-		$change_amount=$input_amount-$output_amount;		
+		$change_amount=$input_amount-$output_amount - CONST_SATOSHI;		
 		$change_address=coinspark_bitcoin_cli('getrawchangeaddress', $testnet);
 		
 		// AMIR (there's no need to create a new address each time)
 		$tmp_address=coinspark_bitcoin_cli('getnewaddress', $testnet);
+
+		echo "Address: ".$tmp_address."\n";
+
 		$tmp_address2=coinspark_bitcoin_cli('getnewaddress', $testnet);
 		if ($input_amount == $output_amount) {
 			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
                                 $tmp_address => $output_amount, // stub
-                               $tmp_address2 => $output_amount,
+                               $tmp_address2 => CONST_SATOSHI,
 			));
 		} else {
 			// --
@@ -108,7 +112,7 @@
 				// AMIR
 				//$send_address => (float)$send_amount,
 				$tmp_address => $output_amount, // stub
-				$tmp_address2 => $output_amount,
+				$tmp_address2 => CONST_SATOSHI,
 				// --
 				$change_address => $change_amount,
 			));
@@ -123,10 +127,11 @@
 
 		// AMIR
 		$txn_unpacked['vout'][1]=array(
-			'value' => 0,
-			'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
+			// 'value' => 0,
+			'scriptPubKey' => '20f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
+			// 'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
 		);
-		// --
+		//
 
 		$raw_txn=coinspark_pack_raw_txn($txn_unpacked);
 		
