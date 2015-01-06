@@ -9,7 +9,8 @@
  * @return [float] price
  */
 function getLastBTCValueInUSD() {
-	$ticker_url = 'https://www.bitstamp.net/api/ticker/';
+	//$ticker_url = 'https://www.bitstamp.net/api/ticker/';
+	$ticker_url = 'https://btc-e.com/api/2/btc_usd/ticker';	
 	
 	$request = curl_init();
 	curl_setopt($request, CURLOPT_URL, $ticker_url);
@@ -28,7 +29,8 @@ function getLastBTCValueInUSD() {
 	// close connection
 	curl_close($request);
 
-	return $responseData['last'];
+	//return $responseData['last'];
+	return $responseData['ticker']['last'];
 }
 
 function getBTCValueForUSD($value, $precision=8) {

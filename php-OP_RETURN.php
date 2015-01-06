@@ -83,41 +83,49 @@
 		// AMIR
 		//$output_amount=$send_amount+CONST_BITCOIN_FEE;		
 		//$output_amount=CONST_BITCOIN_FEE;
-		$output_amount=getBTCValueForUSD(CONST_BITCOIN_FEE_IN_USD) + CONST_DUST;
+		$fee=getBTCValueForUSD(CONST_BITCOIN_FEE_IN_USD);
+		$output_amount=CONST_DUST;
 		// --
 
 		foreach ($unspent_inputs as $unspent_input) {
 			$inputs_spend[]=$unspent_input;
 
 			$input_amount+=$unspent_input['amount'];
-			if ($input_amount>=$output_amount)
+			if ($input_amount>=$output_amount + $fee)
 				break; // stop when we have enough
 		}
 		
-		if ($input_amount<$output_amount)
+		if ($input_amount<$output_amount + $fee)
 			return array('error' => 'Not enough funds are available to cover the amount and fee');
 	
 	
 	//	Build the initial raw transaction
 			
-		$change_amount=$input_amount-$output_amount;
+		$change_amount=$input_amount-$output_amount-$fee;
+
+		echo "----------------------------------------------------------------------------------\n";
+		echo "Funds:\n";
+		echo 'Input: '.$input_amount.', output: '.$output_amount.', fee: '.$fee.' (change: '.$change_amount.")\n";
+		echo "----------------------------------------------------------------------------------\n";
+
 		$change_address=coinspark_bitcoin_cli('getrawchangeaddress', $testnet);
-		
+		//$change_address=coinspark_bitcoin_cli('getnewaddress', $testnet);
+
 		// AMIR (there's no need to create a new address each time)
 		$tmp_address=coinspark_bitcoin_cli('getnewaddress', $testnet);
 		$tmp_address2=coinspark_bitcoin_cli('getnewaddress', $testnet);
-		if ($input_amount == $output_amount) {
+		if ($input_amount == $output_amount + $fee) {
 			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
-                                $tmp_address => $output_amount, // stub
-                               $tmp_address2 => CONST_DUST,
+                                $tmp_address => $fee, // stub
+                               $tmp_address2 => $output_amount,
 			));
 		} else {
 			// --
 			$raw_txn=coinspark_bitcoin_cli('createrawtransaction', $testnet, $inputs_spend, array(
 				// AMIR
 				//$send_address => (float)$send_amount,
-				$tmp_address => $output_amount, // stub
-				$tmp_address2 => CONST_DUST,
+				$tmp_address => $fee, // stub
+				$tmp_address2 => $output_amount,
 				// --
 				$change_address => $change_amount,
 			));
@@ -135,7 +143,7 @@
 			'value' => CONST_DUST,
 			// 'scriptPubKey' => OP_1.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.OP_2.OP_CHECKMULTISIG,
 			// 'scriptPubKey' => '0103ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c6301AE'
-			'scriptPubKey' => OP_1.'21'.'5052564359010001000000000251d75544b04a9471eec80d5c1b8f5e127b093582'.'26'.'505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579'.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.OP_3.OP_CHECKMULTISIG,
+			'scriptPubKey' => OP_1.'21'.'5052564359010001000000000251d75544b04a9471eec80d5c1b8f5e127b093582'.'26'.'505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579'.'21'.'02d800a70a7a3e4971d62cee887e2f998cc047793c6fde48bcdab1a13b2287f38e'.OP_3.OP_CHECKMULTISIG,
 			// 'scriptPubKey' => '1 505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579 03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'
 			// 'scriptPubKey' => '26505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
 			// 'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
