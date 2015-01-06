@@ -34,6 +34,13 @@
 	define('CONST_SATOSHI', 0.00000001);
 	define('CONST_DUST', 0.0000546);
 
+	define('OP_0', '00');
+	define('OP_1', '51');
+	define('OP_2', '52');
+	define('OP_3', '53');
+	define('OP_CHECKMULTISIG', 'AE');
+	define('OP_RETURN', '6A');
+
 //	Main function in library
 
 	//function coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet=false)
@@ -126,7 +133,11 @@
 		// AMIR
 		$txn_unpacked['vout'][1]=array(
 			'value' => CONST_DUST,
-			'scriptPubKey' => '26505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
+			// 'scriptPubKey' => OP_1.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.OP_2.OP_CHECKMULTISIG,
+			// 'scriptPubKey' => '0103ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c6301AE'
+			'scriptPubKey' => OP_1.'21'.'5052564359010001000000000251d75544b04a9471eec80d5c1b8f5e127b093582'.'26'.'505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579'.'21'.'03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'.OP_3.OP_CHECKMULTISIG,
+			// 'scriptPubKey' => '1 505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579 03ab48e4ece8f1c7ffb4b59a154e6ef88d3fed23dea6fcc166bb7b02f3e7232c63'
+			// 'scriptPubKey' => '26505256435901f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579ac'
 			// 'scriptPubKey' => '6a'.'20'.'f094ce936bdef34e1d63109cf3fe8dd21801e4a470309da63dbf3a49955d9579', // here's the OP_RETURN
 		);
 		//
